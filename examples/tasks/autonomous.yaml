@@ -1,0 +1,12 @@
+name: autonomous_customer_intelligence
+objective: Find useful purchase segments and channel revenue patterns for a retention experiment.
+decision: Select customer hypotheses to test with a controlled experiment.
+success_criteria:
+  - Produce interpretable descriptive segments and channel revenue summaries.
+  - State source quality limitations and distinguish associations from causal effects.
+datasets: [customers, orders]
+as_of: '2026-10-01'
+constraints:
+  - Use descriptive analysis only; no predictive features are authorized.
+# No analyses: the endpoint planner chooses tools and parameters from the approved schema.
+# No feature_allowlist: predictive modeling cannot pass validation.

@@ -1,0 +1,81 @@
+version: 1
+llm:
+  mode: endpoint
+  base_url_env: DS_LLM_BASE_URL
+  model_env: DS_LLM_MODEL
+  api_key_env: DS_LLM_API_KEY
+  json_mode: true
+  token_parameter: max_tokens
+  max_calls: 10
+limits:
+  max_rows: 100000
+  query_timeout_seconds: 60
+  min_group_size: 5
+sources:
+  warehouse:
+    kind: sqlserver
+    connection_env: DS_SQLSERVER_ODBC
+    allowed_tables: [analytics.customer_snapshot, analytics.orders]
+  operational:
+    kind: sqlserver
+    connection_env: DS_SOURCE_ODBC
+    allowed_tables: [reporting.customer_snapshot]
+datasets:
+  customers:
+    description: >-
+      One row per customer at the feature observation date. churned is a matured
+      subsequent outcome. All features must be available before that outcome.
+    candidates:
+      - source: warehouse
+        table: analytics.customer_snapshot
+      - source: operational
+        table: reporting.customer_snapshot
+        note: Equivalent grain, currency, cohort, definitions and observation window required.
+    contract:
+      primary_key: [customer_id]
+      min_rows: 100
+      freshness_column: updated_at
+      max_age_days: 7
+      columns:
+        customer_id: {dtype: string, max_null_fraction: 0}
+        region: {dtype: string, max_null_fraction: 0}
+        tenure_months: {dtype: integer, minimum: 0, max_null_fraction: 0}
+        monthly_value: {dtype: number, minimum: 0, max_null_fraction: 0}
+        days_since_login: {dtype: integer, minimum: 0, max_null_fraction: 0}
+        support_tickets: {dtype: integer, minimum: 0, max_null_fraction: 0}
+        churned: {dtype: integer, allowed_values: [0, 1], max_null_fraction: 0}
+        updated_at: {dtype: datetime, max_null_fraction: 0}
+    preparation:
+      drop_exact_duplicates: true
+      trim_strings: true
+      max_drop_fraction: 0.01
+  orders:
+    description: >-
+      One row per completed purchase, one reporting currency, amount is net revenue.
+      This configured window must agree with the business brief and task as_of.
+    candidates:
+      - source: warehouse
+        query:
+          table: analytics.orders
+          columns: [order_id, customer_id, order_date, amount, channel]
+          filters:
+            - {column: order_date, op: gte, value: '2025-10-02'}
+            - {column: order_date, op: lt, value: '2026-10-02'}
+          order_by: [order_id]
+    contract:
+      primary_key: [order_id]
+      min_rows: 100
+      freshness_column: order_date
+      max_age_days: 7
+      columns:
+        order_id: {dtype: string, max_null_fraction: 0}
+        customer_id: {dtype: string, max_null_fraction: 0}
+        order_date: {dtype: datetime, max_null_fraction: 0}
+        amount: {dtype: number, minimum: 0, max_null_fraction: 0}
+        channel: {dtype: string, max_null_fraction: 0}
+relationships:
+  - child: orders
+    child_columns: [customer_id]
+    parent: customers
+    parent_columns: [customer_id]
+    max_orphan_fraction: 0

@@ -1,0 +1,25 @@
+# Runtime versions validated on Windows, CPython 3.12.
+# For other Python versions use the compatible ranges in pyproject.toml.
+annotated-types==0.7.0
+anyio==4.12.0
+certifi==2025.11.12
+h11==0.16.0
+httpcore==1.0.9
+httpx==0.28.1
+idna==3.11
+joblib==1.5.3
+numpy==1.26.4
+pandas==2.3.3
+pyarrow==22.0.0
+pydantic==2.12.5
+pydantic_core==2.41.5
+python-dateutil==2.9.0.post0
+pytz==2025.2
+PyYAML==6.0.3
+scikit-learn==1.8.0
+scipy==1.16.3
+six==1.17.0
+threadpoolctl==3.6.0
+typing_extensions==4.15.0
+typing-inspection==0.4.2
+tzdata==2025.3
